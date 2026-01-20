@@ -1,20 +1,18 @@
-# PH Node Service Template
+# 🧪 MercuryJS
 
-Template para micro-serviços Node.js com TypeScript, Express e Nodemon.
+[MercuryJS](https://mercuryjs.com) is an Express boilerplate for creating HTTP API services
 
-## Criar novo serviço
+## Create a new service
 
 ```
-npx degit nodejs-service-template novo-servico
-cd novo-servico
+npx degit https://github.com/diego-hartmann/mercuryjs <your-service-name>
+cd <your-service-name>
 npm install
 npm run dev
 ```
 
-## Estrutura
+## Optional API Client: 🐶 Bruno
 
-- src/index.ts
-- src/health.ts
-- nodemon.json
-- tsconfig.json
-- .env.example
+Install Bruno:
+- macOS: brew install --cask bruno
+- Windows / Linux: https://www.usebruno.com
