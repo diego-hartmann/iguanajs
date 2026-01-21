@@ -3,8 +3,8 @@ import { ArtifactType } from './module-types/feature/models';
 import createFeature from './module-types/feature';
 import createMiddleware from './module-types/middleware';
 
-function promptMessage(text: string, prefix: string = ''): string {
-  return `${prefix}👷🏻‍ "${text}"`;
+function promptMessage(text: string): string {
+  return `🦎  ${text}`;
 }
 
 async function main() {
@@ -36,33 +36,41 @@ async function main() {
     await prompts({
       type: 'text',
       name: 'name',
-      message: promptMessage(`Whoops, this name is invalid. Aborting creation of ${type}.`, '⚠️ ')
+      message: promptMessage(` ⚠️ Whoops, this name is invalid. Aborting creation of ${type}.`)
     });
     process.exit(1);
   }
 
   const artifactMapper: Record<ArtifactType, () => Promise<void>> = {
-    feature: async () => createFeature(trimmed),
+    feature: async () => {
+      const { isEntityInDatabase } = await prompts({
+        type: 'select',
+        name: 'isEntityInDatabase',
+        message: promptMessage(`Should this feature persist data?`),
+        choices: [
+          { title: 'Yes (entity in database)', value: true },
+          { title: 'No (logic-only)', value: false }
+        ]
+      });
+
+      await createFeature(trimmed, isEntityInDatabase);
+    },
     middleware: async () => createMiddleware(trimmed)
   };
   try {
     const createdMethod = artifactMapper[type as ArtifactType];
     if (!createdMethod) {
-      console.log(
-        promptMessage(`Whoops, '${type}' is an invalid option. Aborting creation.`, '⚠️ ')
-      );
+      console.log(promptMessage(`⚠️ Whoops, '${type}' is an invalid option. Aborting creation.`));
       process.exit(1);
     }
     await createdMethod();
-    console.log(
-      promptMessage(`Great news! Your ${type} '${trimmed}' has been created successfully!`, '🔥 ')
-    );
+    console.log(promptMessage(`🔥 🔥 🔥  ${type} '${trimmed}' created! 🔥 🔥 🔥`));
   } catch (error) {
     console.log(error);
   }
 }
 
 main().catch((err) => {
-  console.error('Error running make.ts:', err);
+  console.error('Error running scripts/make.ts:', err);
   process.exit(1);
 });

@@ -14,7 +14,7 @@ app.use(securityMiddleware);
 app.use(requestLoggerMiddleware);
 
 app.get('/health', (_req, res) => {
-  res.status(200).json({ message: 'PH Node Service Template is running.' });
+  res.status(200).json({ message: 'IguanaJS Node Service Template is running.' });
 });
 
 // monta rotas (ex.: /api)

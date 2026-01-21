@@ -1,47 +1,45 @@
-export default function serviceTemplate(pascalName: string, kebabName: string): string {
-  return `import { randomUUID } from 'crypto';
-import { ${pascalName}Repository } from '../repositories/${kebabName}.repository';
-import { ${pascalName} } from '../models/${kebabName}.models';
+export default function serviceTemplate(
+  pascalName: string,
+  kebabName: string,
+  isDatabaseEntity: boolean = true
+): string {
+  if (isDatabaseEntity) {
+    return `export class ${pascalName}Service {
+      // TODO add logic here
+    }
+`;
+  }
 
-type Pagination = {
-  limit: number;
-  offset: number;
-};
+  return `import { ${pascalName}Repository } from '../repositories/${kebabName}.repository';
+import type { ${pascalName} } from '../models/${kebabName}.models';
+import type { Pagination } from '../../shared/utils/pagination.util';
 
 export class ${pascalName}Service {
   constructor(private readonly repo = new ${pascalName}Repository()) {}
 
-  listAll(): ${pascalName}[] {
+  async listAll(): Promise<${pascalName}[]> {
     return this.repo.findAll();
   }
 
-  listPage(pagination: Pagination): { data: ${pascalName}[]; total: number } {
-    const total = this.repo.count();
-    const data = this.repo.findAll({
-      limit: pagination.limit,
-      offset: pagination.offset
-    });
+  async listPage(pagination: Pagination): Promise<{ data: ${pascalName}[]; total: number }> {
+    const [data, total] = await Promise.all([this.repo.findAll(pagination), this.repo.count()]);
     return { data, total };
   }
 
-  getById(id: string): ${pascalName} | undefined {
+  async getById(id: string): Promise<${pascalName} | null> {
     return this.repo.findById(id);
   }
 
-  create(data: Omit<${pascalName}, 'id'>): ${pascalName} {
-    const entity: ${pascalName} = {
-      id: randomUUID(),
-      ...data
-    };
-    return this.repo.create(entity);
+  async create(data: Omit<${pascalName}, 'id'>): Promise<${pascalName}> {
+    return this.repo.create(data);
   }
 
-  update(id: string, data: Partial<Omit<${pascalName}, 'id'>>): ${pascalName} | undefined {
-    return this.repo.update(id, data as Partial<${pascalName}>);
+  async update(id: string, data: Partial<Omit<${pascalName}, 'id'>>): Promise<${pascalName} | null> {
+    return this.repo.update(id, data);
   }
 
-  remove(id: string): void {
-    this.repo.delete(id);
+  async remove(id: string): Promise<void> {
+    await this.repo.delete(id);
   }
 }
 `;

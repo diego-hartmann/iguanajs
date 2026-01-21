@@ -19,8 +19,11 @@ yarn-error.log*
 # Environment / Secrets
 # ----------------------
 .env
-.env.*
-!.env.example
+
+# ----------------------
+# PostgresDB
+# ----------------------
+prisma/generated/
 
 # ----------------------
 # OS / Editor
@@ -70,3 +73,5 @@ reports/
 *.local
 *.orig
 *.rej
+
+/src/generated/prisma

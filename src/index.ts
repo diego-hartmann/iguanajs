@@ -1,9 +1,10 @@
 import { pinoLogger } from './config/logger';
 import { startExpressHttpServer } from './server/server';
+import { ENV } from './config/env';
 
 pinoLogger.info('🔥 Igniting application');
 
-const port = Number(process.env.PORT) || 3000;
+const port = ENV.PORT || 3000;
 
 startExpressHttpServer(port, `💻 Server running - listening on port ${port}`);
 

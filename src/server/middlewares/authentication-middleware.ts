@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { HTTP_ERROR } from '../../shared/errors/http-error.util';
 import { createMiddleware, Middleware } from '../../shared/utils/create-middleware';
+import { ENV } from '../../config/env';
 
 export type JwtPayload = {
   sub: string;
@@ -11,7 +12,7 @@ const requireJwtMiddleware: Middleware = createMiddleware((req) => {
   const auth = req.header('authorization');
   if (!auth?.startsWith('Bearer ')) throw HTTP_ERROR.unauthorized('Missing token');
 
-  const secret = process.env.JWT_SECRET;
+  const secret = ENV.JWT_SECRET;
   if (!secret) throw HTTP_ERROR.internalError('Missing JWT_SECRET');
 
   const token = auth.slice('Bearer '.length);
@@ -25,7 +26,7 @@ const requireJwtMiddleware: Middleware = createMiddleware((req) => {
 
 const requireApiKeyMiddleware: Middleware = createMiddleware((req) => {
   const apiKey = req.header('x-api-key');
-  if (apiKey && apiKey === process.env.API_KEY) return;
+  if (apiKey && apiKey === ENV.API_KEY) return;
   throw HTTP_ERROR.unauthorized();
 });
 

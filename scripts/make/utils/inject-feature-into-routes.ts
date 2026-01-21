@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import ROOT from './ROOT';
+import ROOT from '../../utils/ROOT';
 
 export default function injectFeatureIntoServerRoutes(args: {
   kebab: string;
@@ -59,6 +59,7 @@ export default function injectFeatureIntoServerRoutes(args: {
       updated.slice(0, routesBlockStart) + '\n' + newRoutesBlock + updated.slice(routesBlockEnd);
   }
 
+  console.log(`\n🦎  Adding ${args.kebab}'s routes to Router...`);
+  console.log(`🧩  src/server/routes.ts`);
   fs.writeFileSync(routesPath, updated, 'utf8');
-  console.log(`✏️  Added 'server/routes.ts' with '${args.kebab}'s routes.`);
 }
