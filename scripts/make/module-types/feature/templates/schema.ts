@@ -26,9 +26,7 @@ export const ${pascalName}IdParamSchema = z.object({
   id: z.string().min(1)
 });
 
-export const ${pascalName}QuerySchema = z.object({
-  // TODO (pagination, filters, etc)
-});
+export const ${pascalName}QuerySchema = z.object({});
 
 /**
  * Request envelopes (match validateZodMiddleware)

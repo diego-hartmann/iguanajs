@@ -1,5 +1,4 @@
 import { Pagination } from '../../../shared/utils/pagination.util';
-import { DataSource } from './data-source';
 
 type PrismaDelegate<T> = {
   count(args?: any): Promise<number>;
@@ -10,7 +9,7 @@ type PrismaDelegate<T> = {
   delete(args: any): Promise<T>;
 };
 
-export abstract class PrismaDataSourceCrud<T extends { id: string }> implements DataSource<T> {
+export abstract class PrismaCrudRepository<T extends { id: string }> {
   protected constructor(protected readonly delegate: PrismaDelegate<T>) {}
 
   async count(): Promise<number> {

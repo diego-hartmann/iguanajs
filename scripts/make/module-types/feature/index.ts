@@ -13,7 +13,6 @@ import schemaTemplate from './templates/schema';
 import typesTemplate from './templates/types';
 import injectFeatureIntoServerRoutes from '../../utils/inject-feature-into-routes';
 import smokeTestTemplate from './templates/smoke-test';
-import prismaDatasourceTemplate from './templates/datasource/prisma';
 import prismaModelTemplate from './templates/datasource/prisma.model';
 import ROOT from '../../../utils/ROOT';
 
@@ -52,7 +51,6 @@ export default async function createFeature(nameInput: string, isEntityInDatabas
     routesSpec: path.join(dirs.routes, `${kebab}.routes.spec.ts`),
     smokeTest: path.join(dirs.smokeTests, `${kebab}.smoke.spec.ts`),
     // postgres
-    prismaDataSource: path.join(dirs.dataSources, `${kebab}.prisma.ts`),
     prismaModel: path.join(dirs.prisma, `${kebab}.prisma`)
   };
 
@@ -69,7 +67,6 @@ export default async function createFeature(nameInput: string, isEntityInDatabas
   if (isEntityInDatabase) {
     console.log('\n🦎  Writing files for Prisma (PostgresDB)...');
     writeFileIfNotExists(files.repository, repositoryTemplate(pascal, kebab));
-    writeFileIfNotExists(files.prismaDataSource, prismaDatasourceTemplate(pascal, kebab, camel));
     writeFileIfNotExists(files.prismaModel, prismaModelTemplate(pascal));
   }
 

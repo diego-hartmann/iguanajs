@@ -4,7 +4,7 @@ export default function repositoryTemplate(
 ): string {
   return `import { getPrisma } from '../../../store/prisma-client';
 import type { ${pascalName} } from '../models/${kebabName}.models';
-import { PrismaCrudRepository } from './base-classes/prisma-crud.repository';
+import { PrismaCrudRepository } from '../data-sources/base-classes/prisma-crud.repository';
 
 export class ${pascalName}Repository extends PrismaCrudRepository<${pascalName}> {
   constructor() {
