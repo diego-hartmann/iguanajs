@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "make": "tsx scripts/make",
-    "prisma:schema": "cat prisma/base.prisma prisma/models/*.prisma > prisma/schema.prisma",
+    "prisma:schema": "cat prisma/base.prisma prisma/models/*.prisma > prisma/schema.prisma && npm run prisma:client",
     "prisma:client": "rm -rf prisma/generated && npx prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:reset:dev": "npx prisma migrate reset",
@@ -70,6 +70,7 @@
     "prompts": "^2.4.2",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.2.2"
