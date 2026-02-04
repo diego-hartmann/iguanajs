@@ -1,18 +1,35 @@
 export default function schemaTemplate(pascalName: string): string {
   return `import { z } from 'zod';
 
+const EmptyObj = z.object({}).strict();
+
+/**
+ * Base schema without id
+ * (feature author will extend fields)
+ */
+export const ${pascalName}SchemaWithoutId = z.object({
+  // add fields here
+});
+
 /**
  * Resource schema (response / entity)
  */
 export const ${pascalName}Schema = z.object({
-  id: z.string()
+  id: z.string(),
+  ...${pascalName}SchemaWithoutId.shape
 });
 
 /**
  * Body schemas
+ * (Pattern B: { data: ... })
  */
-export const Create${pascalName}BodySchema = z.object({});
-export const Update${pascalName}BodySchema = z.object({});
+export const Create${pascalName}BodySchema = z.object({
+  data: ${pascalName}SchemaWithoutId
+});
+
+export const Update${pascalName}BodySchema = z.object({
+  data: ${pascalName}SchemaWithoutId.partial()
+});
 
 /**
  * Params / Query schemas
@@ -21,42 +38,49 @@ export const ${pascalName}IdParamSchema = z.object({
   id: z.string().min(1)
 });
 
-// default empty; add pagination/filters later
-export const ${pascalName}QuerySchema = z.object({});
+export const ${pascalName}QuerySchema = z.object({
+  all: z.enum(['true', 'false']).optional(),
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional()
+});
 
 /**
  * Request envelopes (match validateZodMiddleware)
  * validateZodMiddleware(schema) parses: { body, query, params }
  */
 
-// LIST → tem query
+// LIST
 export const List${pascalName}RequestSchema = z.object({
-  body: z.object({}).optional(),
-  query: ${pascalName}QuerySchema.optional(),
-  params: z.object({}).optional()
+  body: EmptyObj.optional(),
+  query: ${pascalName}QuerySchema.default({}),
+  params: EmptyObj.default({})
 });
 
-// CREATE → sem query
+// CREATE
 export const Create${pascalName}RequestSchema = z.object({
   body: Create${pascalName}BodySchema,
-  params: z.object({}).optional()
+  query: EmptyObj.default({}),
+  params: EmptyObj.default({})
 });
 
-// GET BY ID → sem query
+// GET BY ID
 export const Get${pascalName}ByIdRequestSchema = z.object({
-  body: z.object({}).optional(),
+  body: EmptyObj.optional(),
+  query: EmptyObj.default({}),
   params: ${pascalName}IdParamSchema
 });
 
-// UPDATE → sem query
+// UPDATE
 export const Update${pascalName}RequestSchema = z.object({
   body: Update${pascalName}BodySchema,
+  query: EmptyObj.default({}),
   params: ${pascalName}IdParamSchema
 });
 
-// DELETE → sem query
+// DELETE
 export const Delete${pascalName}RequestSchema = z.object({
-  body: z.object({}).optional(),
+  body: EmptyObj.optional(),
+  query: EmptyObj.default({}),
   params: ${pascalName}IdParamSchema
 });
 `;

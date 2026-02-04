@@ -20,15 +20,27 @@ const MAX_LIMIT = 100;
 export function parsePagination(query: unknown): Pagination {
   const parsed = PaginationQuerySchema.safeParse(query);
 
-  const page = parsed.success ? (parsed.data.page ?? DEFAULT_PAGE) : DEFAULT_PAGE;
+  let page = DEFAULT_PAGE;
+  let limit = DEFAULT_LIMIT;
 
-  const limitRaw = parsed.success ? (parsed.data.limit ?? DEFAULT_LIMIT) : DEFAULT_LIMIT;
-  const limit = Math.min(limitRaw, MAX_LIMIT);
+  if (parsed.success) {
+    const p = parsed.data.page;
+    const l = parsed.data.limit;
+
+    if (typeof p === 'number' && Number.isFinite(p) && p > 0) {
+      page = Math.floor(p);
+    }
+
+    if (typeof l === 'number' && Number.isFinite(l) && l > 0) {
+      limit = Math.min(Math.floor(l), MAX_LIMIT);
+    }
+  }
 
   const offset = (page - 1) * limit;
 
   return { page, limit, offset };
 }
+
 
 export type PaginatedResponse<T> = {
   data: T[];

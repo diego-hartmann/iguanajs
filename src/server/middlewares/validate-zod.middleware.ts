@@ -1,13 +1,25 @@
-import type { AnyZodObject } from 'zod';
+import type { ZodTypeAny } from 'zod';
 import { createMiddleware, Middleware } from '../../shared/utils/create-middleware';
 
-export const validateZodMiddleware = (schema: AnyZodObject): Middleware =>
+export const validateZodMiddleware = (schema: ZodTypeAny): Middleware =>
   createMiddleware((req) => {
-    schema.parse({
+    const result = schema.safeParse({
       body: req.body,
       query: req.query,
       params: req.params
     });
-    // por causa do 'createMiddleware', se falhar, Zod lança → errorHandler
-    // se passar, segue automaticamente
+
+    if (!result.success) {
+      throw result.error;
+    }
+
+    const parsed = result.data as {
+      body?: unknown;
+      query?: unknown;
+      params?: unknown;
+    };
+
+    req.body = parsed.body ?? req.body;
+    req.query = parsed.query ?? req.query;
+    req.params = parsed.params ?? req.params;
   });

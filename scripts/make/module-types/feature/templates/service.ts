@@ -5,37 +5,52 @@ export default function serviceTemplate(
 ): string {
   if (!isDatabaseEntity) {
     return `export class ${pascalName}Service {
-      // TODO add logic here
-    }
+  // TODO add logic here
+}
 `;
   }
 
   return `import { ${pascalName}Repository } from '../repositories/${kebabName}.repository';
-import type { ${pascalName} } from '../models/${kebabName}.models';
+import type { ${pascalName}, ${pascalName}Create, ${pascalName}Update } from '../models/${kebabName}.models';
+import { ${pascalName}Mapper } from '../mappers/${kebabName}.mapper';
 import type { Pagination } from '../../shared/utils/pagination.util';
 
 export class ${pascalName}Service {
-  constructor(private readonly repo = new ${pascalName}Repository()) {}
+  constructor(
+    private readonly repo = new ${pascalName}Repository(),
+    private readonly mapper = new ${pascalName}Mapper()
+  ) {}
 
   async listAll(): Promise<${pascalName}[]> {
-    return this.repo.findAll();
+    const rows = await this.repo.findAll();
+    return rows.map((r) => this.mapper.toDomain(r));
   }
 
   async listPage(pagination: Pagination): Promise<{ data: ${pascalName}[]; total: number }> {
-    const [data, total] = await Promise.all([this.repo.findAll(pagination), this.repo.count()]);
-    return { data, total };
+    const [rows, total] = await Promise.all([
+      this.repo.findAll(pagination),
+      this.repo.count()
+    ]);
+
+    return {
+      data: rows.map((r) => this.mapper.toDomain(r)),
+      total
+    };
   }
 
   async getById(id: string): Promise<${pascalName} | null> {
-    return this.repo.findById(id);
+    const row = await this.repo.findById(id);
+    return row ? this.mapper.toDomain(row) : null;
   }
 
-  async create(data: Omit<${pascalName}, 'id'>): Promise<${pascalName}> {
-    return this.repo.create(data);
+  async create(data: ${pascalName}Create): Promise<${pascalName}> {
+    const created = await this.repo.create(this.mapper.toCreateInput(data));
+    return this.mapper.toDomain(created);
   }
 
-  async update(id: string, data: Partial<Omit<${pascalName}, 'id'>>): Promise<${pascalName} | null> {
-    return this.repo.update(id, data);
+  async update(id: string, data: ${pascalName}Update): Promise<${pascalName} | null> {
+    const updated = await this.repo.update(id, this.mapper.toUpdateInput(data));
+    return updated ? this.mapper.toDomain(updated) : null;
   }
 
   async remove(id: string): Promise<void> {

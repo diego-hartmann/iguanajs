@@ -4,11 +4,10 @@ export default function routesTemplate(
   camelName: string,
   pluralKebab: string
 ): string {
-  return `import { Router, type RequestHandler } from 'express';
-import { z, type ZodTypeAny } from 'zod';
+  return `import { Router } from 'express';
+import { z } from 'zod';
 import { ${pascalName}Controller } from '../controllers/${kebabName}.controller';
 
-// validator
 import { validateZodMiddleware } from '../../server/middlewares/validate-zod.middleware';
 
 import {
@@ -20,25 +19,34 @@ import {
   Delete${pascalName}RequestSchema
 } from '../validations/${kebabName}.schema';
 
-type HttpMethod = 'get' | 'post' | 'patch' | 'delete';
+import { ApiContract } from '../../shared/types/routes.types';
 
-export type ApiRoute = {
-  method: HttpMethod;
-  path: string; // relative to basePath
-  handler: RequestHandler;
-  requestSchema: ZodTypeAny; // always validate
-  responses: Record<number, { description: string; schema?: ZodTypeAny }>;
-};
-
-export type ApiContract = {
-  basePath: string;
-  tag: string;
-  routes: ApiRoute[];
-};
+type ${pascalName}RequestSchemas =
+  | typeof List${pascalName}RequestSchema
+  | typeof Create${pascalName}RequestSchema
+  | typeof Get${pascalName}ByIdRequestSchema
+  | typeof Update${pascalName}RequestSchema
+  | typeof Delete${pascalName}RequestSchema;
 
 const controller = new ${pascalName}Controller();
 
-export const ${camelName}Contract: ApiContract = {
+const ${pascalName}ResponseSchema = z.object({
+  data: ${pascalName}Schema
+});
+
+const ${pascalName}ListResponseSchema = z.object({
+  data: z.array(${pascalName}Schema),
+  meta: z.object({
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+    hasNext: z.boolean(),
+    hasPrev: z.boolean()
+  })
+});
+
+export const ${camelName}Contract: ApiContract<${pascalName}RequestSchemas> = {
   basePath: '/${pluralKebab}',
   tag: '${pascalName}',
   routes: [
@@ -48,7 +56,7 @@ export const ${camelName}Contract: ApiContract = {
       handler: controller.list,
       requestSchema: List${pascalName}RequestSchema,
       responses: {
-        200: { description: 'OK', schema: z.array(${pascalName}Schema) }
+        200: { description: 'OK', schema: ${pascalName}ListResponseSchema }
       }
     },
     {
@@ -57,7 +65,7 @@ export const ${camelName}Contract: ApiContract = {
       handler: controller.create,
       requestSchema: Create${pascalName}RequestSchema,
       responses: {
-        201: { description: 'Created', schema: ${pascalName}Schema }
+        201: { description: 'Created', schema: ${pascalName}ResponseSchema }
       }
     },
     {
@@ -66,7 +74,7 @@ export const ${camelName}Contract: ApiContract = {
       handler: controller.getById,
       requestSchema: Get${pascalName}ByIdRequestSchema,
       responses: {
-        200: { description: 'OK', schema: ${pascalName}Schema },
+        200: { description: 'OK', schema: ${pascalName}ResponseSchema },
         404: { description: 'Not found' }
       }
     },
@@ -76,7 +84,7 @@ export const ${camelName}Contract: ApiContract = {
       handler: controller.update,
       requestSchema: Update${pascalName}RequestSchema,
       responses: {
-        200: { description: 'OK', schema: ${pascalName}Schema },
+        200: { description: 'OK', schema: ${pascalName}ResponseSchema },
         404: { description: 'Not found' }
       }
     },
@@ -95,10 +103,10 @@ export const ${camelName}Contract: ApiContract = {
 
 export const ${camelName}Routes = Router();
 
-// Single source of truth: contract -> router
 ${camelName}Contract.routes.forEach((r) => {
   ${camelName}Routes[r.method](
     r.path,
+    ...(r.middlewares ?? []),
     validateZodMiddleware(r.requestSchema as any),
     r.handler
   );

@@ -15,8 +15,13 @@ import injectFeatureIntoServerRoutes from '../../utils/inject-feature-into-route
 import smokeTestTemplate from './templates/smoke-test';
 import prismaModelTemplate from './templates/datasource/prisma.model';
 import ROOT from '../../../utils/ROOT';
+import mapperTemplate from './templates/mapper';
 
-export default async function createFeature(nameInput: string, isEntityInDatabase: boolean) {
+export default async function createFeature(
+  nameInput: string,
+  isEntityInDatabase: boolean,
+  hasEndpoints: boolean
+) {
   const { kebab, pascal, camel } = toCase(nameInput);
 
   const pluralKebab = `${kebab}s`;
@@ -27,8 +32,9 @@ export default async function createFeature(nameInput: string, isEntityInDatabas
   const dirs = {
     controllers: path.join(baseDir, 'controllers'),
     schema: path.join(baseDir, 'validations'),
-    types: path.join(baseDir, 'models'),
+    types: path.join(baseDir, 'types'),
     repositories: path.join(baseDir, 'repositories'),
+    mappers: path.join(baseDir, 'mappers'),
     services: path.join(baseDir, 'services'),
     routes: path.join(baseDir, 'routes'),
     smokeTests: path.join(smokeTestsDir, 'smoke'),
@@ -41,9 +47,10 @@ export default async function createFeature(nameInput: string, isEntityInDatabas
   Object.values(dirs).forEach(ensureDir);
 
   const files = {
-    models: path.join(dirs.types, `${kebab}.models.ts`),
+    types: path.join(dirs.types, `${kebab}.types.ts`),
     schema: path.join(dirs.schema, `${kebab}.schema.ts`),
     repository: path.join(dirs.repositories, `${kebab}.repository.ts`),
+    mapper: path.join(dirs.mappers, `${kebab}.mapper.ts`),
     service: path.join(dirs.services, `${kebab}.service.ts`),
     serviceSpec: path.join(dirs.services, `${kebab}.service.spec.ts`),
     controller: path.join(dirs.controllers, `${kebab}.controller.ts`),
@@ -55,26 +62,31 @@ export default async function createFeature(nameInput: string, isEntityInDatabas
   };
 
   console.log('\n🦎  Writing basic files...');
-  writeFileIfNotExists(files.models, typesTemplate(pascal));
-  writeFileIfNotExists(files.schema, schemaTemplate(pascal));
   writeFileIfNotExists(files.service, serviceTemplate(pascal, kebab, isEntityInDatabase));
   writeFileIfNotExists(files.serviceSpec, serviceSpecTemplate(pascal, kebab));
-  writeFileIfNotExists(files.controller, controllerTemplate(pascal, kebab, isEntityInDatabase));
-  writeFileIfNotExists(files.routes, routesTemplate(pascal, kebab, camel, pluralKebab));
-  writeFileIfNotExists(files.routesSpec, routesSpecTemplate(kebab, camel, pluralKebab));
-  writeFileIfNotExists(files.smokeTest, smokeTestTemplate(pascal, camel));
+  writeFileIfNotExists(files.types, typesTemplate(pascal, isEntityInDatabase));
 
   if (isEntityInDatabase) {
     console.log('\n🦎  Writing files for Prisma (PostgresDB)...');
-    writeFileIfNotExists(files.repository, repositoryTemplate(pascal, kebab));
+    writeFileIfNotExists(files.repository, repositoryTemplate(pascal, camel));
     writeFileIfNotExists(files.prismaModel, prismaModelTemplate(pascal));
+    writeFileIfNotExists(files.mapper, mapperTemplate(pascal, kebab));
   }
 
-  injectFeatureIntoServerRoutes({
-    kebab,
-    pluralKebab,
-    pluralCamel: camel
-  });
+  if (hasEndpoints) {
+    console.log('\n🦎  Writing files for HTTP Endpoints...');
+    writeFileIfNotExists(files.controller, controllerTemplate(pascal, kebab, isEntityInDatabase));
+    writeFileIfNotExists(files.routes, routesTemplate(pascal, kebab, camel, pluralKebab));
+    writeFileIfNotExists(files.routesSpec, routesSpecTemplate(kebab, camel, pluralKebab));
+    writeFileIfNotExists(files.smokeTest, smokeTestTemplate(pascal, camel));
+    writeFileIfNotExists(files.schema, schemaTemplate(pascal));
+
+    injectFeatureIntoServerRoutes({
+      kebab,
+      pluralKebab,
+      pluralCamel: camel
+    });
+  }
 
   console.log(`\n🦎  Applying prettier in ${nameInput}s files...`);
   runPrettierOn([baseDir]);

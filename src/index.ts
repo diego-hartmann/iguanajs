@@ -1,11 +1,25 @@
 import { pinoLogger } from './config/logger';
 import { startExpressHttpServer } from './server/server';
 import { ENV } from './config/env';
+import { assertDatabaseConnection } from './shared/utils/prisma-health';
 
-pinoLogger.info('🔥 Igniting application');
+async function bootstrap() {
+  pinoLogger.info('🔥 Igniting application');
 
-const port = ENV.PORT || 3000;
+  await assertDatabaseConnection();
 
-startExpressHttpServer(port, `💻 Server running - listening on port ${port}`);
+  const port = Number(ENV.PORT ?? 3000);
 
-pinoLogger.info('🚀 Application successfully launched 🚀');
+  if (!Number.isFinite(port)) {
+    throw new Error(`Invalid PORT: ${ENV.PORT}`);
+  }
+
+  startExpressHttpServer(port, `💻 Server running - listening on port ${port}`);
+
+  pinoLogger.info('🚀 Application successfully launched 🚀');
+}
+
+bootstrap().catch((err) => {
+  pinoLogger.fatal(err, '💥 Failed to start application');
+  process.exit(1);
+});

@@ -4,6 +4,7 @@ import { requestLoggerMiddleware } from './middlewares/request-logger.middleware
 import routes from './routes';
 import { errorHandlerMiddleware } from './middlewares/error-handler.middleware';
 import { HTTP_ERROR } from '../shared/errors/http-error.util';
+import { disconnectPrisma, getPrisma } from '../../store/prisma-client';
 
 export const app = express();
 
@@ -13,15 +14,27 @@ app.use(express.urlencoded({ extended: true }));
 app.use(securityMiddleware);
 app.use(requestLoggerMiddleware);
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({ message: 'IguanaJS Node Service Template is running.' });
+app.get('/health', async (_req, res, next) => {
+  try {
+    await getPrisma().$queryRaw`SELECT 1`;
+    return res.status(200).json({ data: { status: 'ok' } });
+  } catch {
+    return next(HTTP_ERROR.serviceUnavailable('Database connection failed'));
+  }
 });
 
-// monta rotas (ex.: /api)
 app.use(routes);
 
-// 404 para rotas inexistentes (opcional mas recomendado)
-app.use((_req, _res, next) => next(HTTP_ERROR.notFound('Route not found')));
+app.use((_req, _res, next) =>
+  next(HTTP_ERROR.notFound('Route not found'))
+);
 
-// error handler no fim
 app.use(errorHandlerMiddleware);
+
+async function shutdown() {
+  await disconnectPrisma();
+  process.exit(0);
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

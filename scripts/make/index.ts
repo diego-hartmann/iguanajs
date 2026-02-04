@@ -46,14 +46,26 @@ async function main() {
       const { isEntityInDatabase } = await prompts({
         type: 'select',
         name: 'isEntityInDatabase',
-        message: promptMessage(`Should this feature persist data?`),
+        message: promptMessage(
+          `Is this feature an entity in database? Ex: 'User', 'Product', etc.`
+        ),
         choices: [
           { title: 'Yes (entity in database)', value: true },
           { title: 'No (logic-only)', value: false }
         ]
       });
 
-      await createFeature(trimmed, isEntityInDatabase);
+      const { hasEndpoints } = await prompts({
+        type: 'select',
+        name: 'hasEndpoints',
+        message: promptMessage(`Expose HTTP endpoints?`),
+        choices: [
+          { title: 'Yes', value: true },
+          { title: 'No', value: false }
+        ]
+      });
+
+      await createFeature(trimmed, isEntityInDatabase, hasEndpoints);
     },
     middleware: async () => createMiddleware(trimmed)
   };

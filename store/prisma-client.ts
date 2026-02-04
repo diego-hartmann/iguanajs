@@ -26,7 +26,7 @@ export function getPrisma(): PrismaClient {
 export async function connectPrisma(): Promise<void> {
   const prisma = getPrisma();
   await prisma.$connect();
-  // opcional:
+  // optional:
   // await prisma.$queryRaw`SELECT 1`;
 }
 
